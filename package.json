@@ -7,10 +7,15 @@
     "start": "vinxi start"
   },
   "dependencies": {
+    "@kobalte/core": "^0.12.3",
     "@solidjs/router": "^0.12.5",
     "@solidjs/start": "^0.6.1",
+    "@supabase/supabase-js": "^2.39.7",
     "autoprefixer": "^10.4.14",
+    "cheerio": "1.0.0-rc.12",
+    "dotenv": "^16.4.5",
     "postcss": "^8.4.26",
+    "postgres": "^3.4.3",
     "solid-js": "^1.8.15",
     "tailwindcss": "^3.3.3",
     "vinxi": "^0.3.9"
