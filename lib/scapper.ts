@@ -1,102 +1,90 @@
-import * as cheerio from "cheerio";
-
-function extractPrice(...elements: any) {
-  for (const element of elements) {
-    const priceText = element.text().trim();
-
-    if (priceText) {
-      const cleanPrice = priceText.replace(/[^\d.]/g, "");
-
-      let firstPrice;
-
-      if (cleanPrice) {
-        firstPrice = cleanPrice.match(/\d+\.\d{2}/)?.[0];
-      }
-
-      return firstPrice || cleanPrice;
-    }
-  }
-
-  return "";
-}
+import * as cheerio from 'cheerio'
 
 const scrapeCarousellProduct = async () => {
-  "use server";
+  'use server'
 
-  const url1 =
-    "https://www.carousell.sg/p/dell-s2715h-27-inch-monitor-1286760037/?t-id=33183307_1709540007797&t-referrer=category_homescreen&t-referrer_browse_type=user_item_rec&t-referrer_page_type=homepage&t-referrer_request_id=w_GNpk0RkxIrbiw2&t-referrer_source=homepage";
-  const url2 =
-    "https://www.carousell.sg/p/sg-stock-26%E2%80%9D-shimano-21-s-mountain-bike-mtb-bike-bicycle-mountain-bike-mountain-bicycle-mtb-1194623496/?t-id=33183307_1709540007797&t-referrer=category_homescreen&t-referrer_browse_type=trending&t-referrer_page_type=homepage&t-referrer_request_id=pUrcE2Vfed87eHFp&t-referrer_source=homepage";
-  let response = await fetch(url2);
-  let html = await response.text();
-  const $ = cheerio.load(html);
+  const url =
+    'https://www.carousell.sg/p/lenovo-thinkpad-e440-i5-4gb-ram-1291303404/?t-id=K7LJkTfAaY_1710135878678&t-referrer_browse_type=categories&t-referrer_category_id=213&t-referrer_page_type=category_browse&t-referrer_request_id=nL9AceB_AJpNMpnJ&t-referrer_sort_by=popular&t-tap_index=0'
+  let response = await fetch(url)
+  let html = await response.text()
+  const $ = cheerio.load(html)
 
-  // Extract the title
-  const title = $("h1").text().trim();
+  const images = extractProductImages($)
 
-  // Extract the price
-  const h2PriceElement = $("#FieldSetField-Container-field_price h2");
-  const h3PriceElement = $("#FieldSetField-Container-field_price h3");
-  let price;
+  const title = extractProductTitle($)
+
+  const currentPrice = extractProductCurrentPrice($)
+  const originalPrice = extractProductOriginalPrice($)
+
+  const condition = extractProductCondition($)
+  const category = extractProductCategory($)
+
+  const description = extractDescription($)
+
+  console.log({
+    images,
+    title,
+    currentPrice,
+    originalPrice,
+    condition,
+    category,
+    description,
+  })
+}
+
+const extractProductTitle = ($: cheerio.CheerioAPI) => {
+  return $('h1').text().trim()
+}
+
+const extractProductCurrentPrice = ($: cheerio.CheerioAPI) => {
+  const H2_PRICE_TAG = '#FieldSetField-Container-field_price h2'
+  const H3_PRICE_TAG = '#FieldSetField-Container-field_price h3'
+  const h2PriceElement = $(H2_PRICE_TAG)
+  const h3PriceElement = $(H3_PRICE_TAG)
   if (h2PriceElement.length > 0) {
-    price = h2PriceElement.text();
+    return extractPriceNumber(h2PriceElement.text().trim())
   } else if (h3PriceElement.length > 0) {
-    price = h3PriceElement.text();
+    return extractPriceNumber(h3PriceElement.text().trim())
   } else {
-    price = "Price not found";
+    return '0'
   }
+}
 
-  // Extract original price
-  const originalPrice = $("#FieldSetField-Container-field_price s").text();
+const extractProductOriginalPrice = ($: cheerio.CheerioAPI) => {
+  const ORIGINAL_PRICE_TAG = '#FieldSetField-Container-field_price s'
+  return extractPriceNumber($(ORIGINAL_PRICE_TAG).text().trim())
+}
 
-  /// Extract the condition
-const conditionElement = $('div.D_aMu div:nth-child(1) div.D_aMx p.D_mH.D_mI.D_mM.D_mP.D_mS.D_mU.D_aMA.D_nl span.D_mH.D_mI.D_mL.D_mP.D_mS.D_mU.D_awb.D_nl');
-const condition = conditionElement.text().trim();
+const extractPriceNumber = (price: string): number => {
+  return parseFloat(price.replace(/[^0-9.-]+/g, ''))
+}
 
-// Extract the category
-const categoryElement = $('div.D_aMu div:nth-child(4) div p.D_mH.D_mI.D_mM.D_mP.D_mS.D_mU.D_aMA.D_nl span.D_mH.D_mI.D_mL.D_mP.D_mS.D_mU.D_awb.D_nl, div.D_aMu div:nth-child(4) div p.D_mH.D_mI.D_mM.D_mP.D_mS.D_mU.D_aMA.D_nl a.D_awb.D_pm.D_rp span.D_mH.D_mI.D_mL.D_mO.D_mS.D_mU.D_ph.D_nl');
-const category = categoryElement.map((i, el) => $(el).text().trim()).get().join(' ');
+const extractProductImages = ($: cheerio.CheerioAPI) => {
+  const IMAGES_TAG = 'img.D_nF.M_lt.D_bjx.M_aUN'
+  let images: string[] = []
+  $(IMAGES_TAG).each((_, el) => {
+    const img = $(el).attr('src')
+    images.push(img ? img : '')
+  })
+  return images
+}
 
-// Extract the description
-const descriptionElement = $('div.D_asL#FieldSetField-Container-field_description div.D_blH p.D_mH.D_mI.D_mM.D_mP.D_mS.D_mU.D_blH.D_blJ.D_nl');
-const description = descriptionElement.text().trim();
+const extractProductCondition = ($: cheerio.CheerioAPI) => {
+  return $('p:contains("Condition")')
+    .siblings('.D_aMf')
+    .find('span')
+    .text()
+    .trim()
+}
 
-// Extract delivery options
-const deliveryOptions = [];
+const extractProductCategory = ($: cheerio.CheerioAPI) => {
+  return $('p:contains("Category")').siblings('.D_aMf').find('a').text().trim()
+}
 
-// Standard delivery
-const standardDeliveryElement = $('div.D_aGO:nth-child(1)');
-const standardDeliveryName = standardDeliveryElement.find('div.D_aGT p.D_mH.D_mI.D_mM.D_mP.D_mS.D_mU.D_aGU.D_nl').text().trim();
-const standardDeliveryPrice = standardDeliveryElement.find('div.D_aGW p.D_mH.D_mI.D_mM.D_mP.D_mS.D_mU.D_aGX.D_nl').text().trim();
-const standardDeliveryDuration = standardDeliveryElement.find('div.D_aGQ p.D_mH.D_mI.D_mM.D_mP.D_mS.D_mU.D_aGZ.D_nm').text().trim();
-deliveryOptions.push({ name: standardDeliveryName, price: standardDeliveryPrice, duration: standardDeliveryDuration });
+const extractDescription = ($: cheerio.CheerioAPI) => {
+  const DESCRIPTION_TAG =
+    'div.D_asL#FieldSetField-Container-field_description div.D_blH p.D_mH.D_mI.D_mM.D_mP.D_mS.D_mU.D_blH.D_blJ.D_nl'
+  return $(DESCRIPTION_TAG).text().trim()
+}
 
-// Express delivery
-const expressDeliveryElement = $('div.D_aGO:nth-child(2)');
-const expressDeliveryName = expressDeliveryElement.find('div.D_aGT p.D_mH.D_mI.D_mM.D_mP.D_mS.D_mU.D_aGU.D_nl').text().trim();
-const expressDeliveryPrice = expressDeliveryElement.find('div.D_aGW p.D_mH.D_mI.D_mM.D_mP.D_mS.D_mU.D_aGX.D_nl').text().trim();
-const expressDeliveryDuration = expressDeliveryElement.find('div.D_aGQ p.D_mH.D_mI.D_mM.D_mP.D_mS.D_mU.D_aGZ.D_nm').text().trim();
-deliveryOptions.push({ name: expressDeliveryName, price: expressDeliveryPrice, duration: expressDeliveryDuration });
-
-// Same day delivery
-const sameDayDeliveryElement = $('div.D_aGO:nth-child(3)');
-const sameDayDeliveryName = sameDayDeliveryElement.find('div.D_aGT p.D_mH.D_mI.D_mM.D_mP.D_mS.D_mU.D_aGU.D_nl').text().trim();
-const sameDayDeliveryPrice = sameDayDeliveryElement.find('div.D_aGW p.D_mH.D_mI.D_mM.D_mP.D_mS.D_mU.D_aGX.D_nl').text().trim();
-const sameDayDeliveryDuration = sameDayDeliveryElement.find('div.D_aGQ p.D_mH.D_mI.D_mM.D_mP.D_mS.D_mU.D_aGZ.D_nm').text().trim();
-deliveryOptions.push({ name: sameDayDeliveryName, price: sameDayDeliveryPrice, duration: sameDayDeliveryDuration });
-
-// Meet-up
-const meetupElement = $('div.D_aGO:nth-child(4)');
-const meetupName = meetupElement.find('div.D_aGT p.D_mH.D_mI.D_mM.D_mP.D_mS.D_mU.D_aGU.D_nl').text().trim();
-const meetupPrice = meetupElement.find('div.D_aGW p.D_mH.D_mI.D_mM.D_mP.D_mS.D_mU.D_aGX.D_nl').text().trim();
-const meetupLocation = meetupElement.find('div.D_aGQ div a.D_aHa.D_xu span.D_mH.D_mI.D_mM.D_mO.D_mS.D_mU.D_uv.D_aHb.D_nn').text().trim();
-deliveryOptions.push({ name: meetupName, price: meetupPrice, location: meetupLocation });
-// Extract "Getting this" details
-const gettingThisElement = $('div.D_asL#FieldSetField-Container-field_action_panel_delivery button.D_nv.D_nQ.D_nI.D_nO.D_aHM.D_aHN.D_aHO');
-const gettingThisDescription = gettingThisElement.find('div.D_aHL p.D_mH.D_mI.D_mM.D_mP.D_mS.D_mU.D_nl').text().trim();
-
-  // Print out
-  return {title, price, originalPrice, condition, category, description,deliveryOptions, gettingThisDescription};
-};
-
-export default scrapeCarousellProduct;
+export default scrapeCarousellProduct
