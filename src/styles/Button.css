@@ -24,3 +24,8 @@
 .button:active {
   background-color: hsl(201 90% 27%);
 }
+.button:disabled {
+  background-color: hsl(0 0% 80%);
+  color: hsl(0 0% 60%);
+  cursor: not-allowed;
+}
