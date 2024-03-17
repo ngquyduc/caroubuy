@@ -2,9 +2,10 @@ import { Browser, executablePath } from 'puppeteer'
 import puppeteer from 'puppeteer-extra'
 import StealthPlugin from 'puppeteer-extra-plugin-stealth'
 
+import supabase from './supabase'
 import scrapeCarousellProduct from './scapper'
 
-export const fetchHTML = async (url: string) => {
+export const fetchAndSaveProduct = async (url: string) => {
   'use server'
 
   puppeteer.use(StealthPlugin())
@@ -25,7 +26,40 @@ export const fetchHTML = async (url: string) => {
     }
   })
 
-  scrapeCarousellProduct(data.html)
-  await page.screenshot({ path: '1.png' })
+  const scraped_data = await scrapeCarousellProduct(data.html)
+  const scraped_product = Object.assign({ url: url }, scraped_data)
+
+  // check if product already exists, update if it does, else insert
+  const { data: products, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('url', url)
+  if (error) {
+    console.error('Error fetching products:', error)
+    await browser.close()
+
+    return
+  }
+  if (products && products.length > 0) {
+    const { data, error } = await supabase
+      .from('products')
+      .update(scraped_product)
+      .eq('url', url)
+    if (error) {
+      console.error('Error updating product:', error)
+      await browser.close()
+      return
+    }
+  } else {
+    const { data, error } = await supabase
+      .from('products')
+      .insert(scraped_product)
+    if (error) {
+      console.error('Error inserting product:', error)
+      await browser.close()
+      return
+    }
+  }
+
   await browser.close()
 }
