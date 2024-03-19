@@ -1,9 +1,7 @@
+'use server'
 import * as cheerio from 'cheerio'
-import { AnyNode } from 'postcss'
 
 const scrapeCarousellProduct = async (html: string) => {
-  'use server'
-
   const $ = await cheerio.load(html)
 
   // title

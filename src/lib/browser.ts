@@ -1,14 +1,15 @@
-import { Browser, executablePath } from 'puppeteer'
-import puppeteer from 'puppeteer-extra'
-import StealthPlugin from 'puppeteer-extra-plugin-stealth'
+'use server'
 
 import supabase from './supabase'
 import scrapeCarousellProduct from './scapper'
+import { Browser } from 'puppeteer'
+
+const puppeteer = require('puppeteer-extra')
+const StealthPlugin = require('puppeteer-extra-plugin-stealth')
+const { executablePath } = require('puppeteer')
+puppeteer.use(StealthPlugin())
 
 export const fetchAndSaveProduct = async (url: string) => {
-  'use server'
-
-  puppeteer.use(StealthPlugin())
   const browser: Browser = await puppeteer.launch({
     headless: false,
     executablePath: executablePath(),
@@ -16,7 +17,7 @@ export const fetchAndSaveProduct = async (url: string) => {
   const page = await browser.newPage()
   await page.goto(url)
   // await page.waitForSelector('img', {
-  //   visible: true
+  //   visible: true,
   // })
   const data = await page.evaluate(async () => {
     return {
