@@ -63,3 +63,10 @@ export const fetchAndSaveProduct = async (url: string) => {
 
   await browser.close()
 }
+
+const isCarousellProductURL = (url: string): boolean => {
+  const carousellProductURLPattern =
+    /^https:\/\/www\.carousell\.sg\/p\/[a-zA-Z0-9-]+\/?/
+
+  return carousellProductURLPattern.test(url)
+}
