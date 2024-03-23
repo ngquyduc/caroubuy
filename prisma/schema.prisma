@@ -1,0 +1,27 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model products {
+  url            String   @id
+  title          String
+  category       String
+  description    String?
+  condition      String
+  price          Decimal  @db.Decimal
+  original_price Decimal? @db.Decimal
+  images         String[]
+}
+
+enum condition {
+  Brand_new    @map("Brand new")
+  Like_new     @map("Like new")
+  Lightly_used @map("Lightly used")
+  Well_used    @map("Well used")
+  Heavily_used @map("Heavily used")
+}
