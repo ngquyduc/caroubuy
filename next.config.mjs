@@ -1,8 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    esmExternals: "loose", // <-- add this
-    serverComponentsExternalPackages: ["mongoose"], // <-- and this
+    esmExternals: "loose",
+    serverComponentsExternalPackages: [
+      "mongoose",
+      "puppeteer-extra",
+      "puppeteer-extra-plugin-stealth",
+    ],
   },
 };
 

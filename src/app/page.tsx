@@ -1,5 +1,13 @@
-import Image from "next/image";
+import { getAllProducts } from "@/actions/product";
+import { SearchBar } from "@/components/SearchBar";
 
-export default function Home() {
-  return <div>Hello, World</div>;
+export default async function Home() {
+  const products = await getAllProducts();
+
+  return (
+    <main>
+      <SearchBar />
+      {products?.map((product) => JSON.stringify(product))}
+    </main>
+  );
 }
