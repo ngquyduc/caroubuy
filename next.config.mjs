@@ -8,6 +8,14 @@ const nextConfig = {
       "puppeteer-extra-plugin-stealth",
     ],
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "media.karousell.com",
+      },
+    ],
+  },
 };
 
 export default nextConfig;

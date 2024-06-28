@@ -1,4 +1,5 @@
 import { getAllProducts } from "@/actions/product";
+import { ProductCard } from "@/components/ProductCard";
 import { SearchBar } from "@/components/SearchBar";
 
 export default async function Home() {
@@ -7,7 +8,11 @@ export default async function Home() {
   return (
     <main>
       <SearchBar />
-      {products?.map((product) => JSON.stringify(product))}
+      <div className="grid grid-cols-4">
+        {products?.map((product) => (
+          <ProductCard key={product.url} product={product} />
+        ))}
+      </div>
     </main>
   );
 }
